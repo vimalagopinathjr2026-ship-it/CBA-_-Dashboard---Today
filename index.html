@@ -1,0 +1,311 @@
+n<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBA Subject Analysis Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      color: #333;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      height: 70px;
+      resize: vertical;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .results-section {
+      margin-top: 30px;
+      display: none;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .card {
+      background: #eef2f7;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      border-left: 5px solid #007bff;
+    }
+    .card h4 {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+    .card p {
+      margin: 10px 0 0 0;
+      font-size: 22px;
+      font-weight: bold;
+      color: #222;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Teacher Subject Data Entry & Dashboard</h1>
+    <p style="text-align: center; color: #666;">Fill in the subject details and question scores below, then click Analyze.</p>
+
+    <!-- STEP 1: SUBJECT DETAILS -->
+    <div class="form-group">
+      <label for="subjectName">Subject Name:</label>
+      <input type="text" id="subjectName" placeholder="e.g., Mathematics, Science, English">
+    </div>
+
+    <div class="form-group">
+      <label for="teacherName">Teacher Name:</label>
+      <input type="text" id="teacherName" placeholder="e.g., Mr. Smith">
+    </div>
+
+    <hr>
+
+    <!-- STEP 2: SCORES FOR EVERY QUESTION -->
+    <h3>Enter Student Marks for Each Question</h3>
+    <p style="font-size: 12px; color: #777;">(Enter marks separated by commas, e.g., 5, 4, 3, 5, 2)</p>
+
+    <div class="form-group">
+      <label for="q1">Question 1 Marks:</label>
+      <textarea id="q1" placeholder="5, 4, 3, 5, 2, 4, 5"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="q2">Question 2 Marks:</label>
+      <textarea id="q2" placeholder="3, 2, 4, 5, 1, 3, 4"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="q3">Question 3 Marks:</label>
+      <textarea id="q3" placeholder="4, 5, 5, 2, 3, 4, 5"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="q4">Question 4 Marks:</label>
+      <textarea id="q4" placeholder="2, 3, 4, 4, 5, 1, 3"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="q5">Question 5 Marks:</label>
+      <textarea id="q5" placeholder="5, 5, 4, 3, 4, 5, 2"></textarea>
+    </div>
+
+    <button onclick="analyzeSubjectData()">Analyze Data</button>
+
+    <!-- STEP 3: DASHBOARD OUTPUT -->
+    <div id="resultsSection" class="results-section">
+      <hr>
+      <h2>Analysis Dashboard</h2>
+      
+      <div class="cards-grid">
+        <div class="card">
+          <h4>Subject</h4>
+          <p id="resSubject">-</p>
+        </div>
+        <div class="card">
+          <h4>Teacher</h4>
+          <p id="resTeacher">-</p>
+        </div>
+        <div class="card">
+          <h4>Total Students</h4>
+          <p id="resTotalStudents">0</p>
+        </div>
+        <div class="card">
+          <h4>Overall Average Score</h4>
+          <p id="resOverallAvg">0</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 25px;">Question-by-Question Breakdown</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Total Responses</th>
+            <th>Average Mark</th>
+            <th>Highest Mark</th>
+            <th>Lowest Mark</th>
+          </tr>
+        </thead>
+        <tbody id="questionTableBody">
+          <!-- Filled dynamically by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT FOR CALCULATIONS -->
+  <script>
+    function parseScores(inputText) {
+      if (!inputText) return [];
+      return inputText.split(',')
+                      .map(item => parseFloat(item.trim()))
+                      .filter(num => !isNaN(num));
+    }
+
+    function analyzeSubjectData() {
+      const subject = document.getElementById('subjectName').value.trim() || 'N/A';
+      const teacher = document.getElementById('teacherName').value.trim() || 'N/A';
+
+      const questionIds = ['q1', 'q2', 'q3', 'q4', 'q5'];
+      let tableHtml = '';
+      let totalAllScores = 0;
+      let countAllScores = 0;
+      let maxStudents = 0;
+
+      questionIds.forEach((qId, index) => {
+        const rawText = document.getElementById(qId).value;
+        const scores = parseScores(rawText);
+
+        if (scores.length > 0) {
+          const count = scores.length;
+          const sum = scores.reduce((a, b) => a + b, 0);
+          const avg = (sum / count).toFixed(2);
+          const max = Math.max(...scores);
+          const min = Math.min(...scores);
+
+          totalAllScores += sum;
+          countAllScores += count;
+          if (count > maxStudents) maxStudents = count;
+
+          tableHtml += `
+            <tr>
+              <td>Question ${index + 1}</td>
+              <td>${count}</td>
+              <td>${avg}</td>
+              <td>${max}</td>
+              <td>${min}</td>
+            </tr>
+          `;
+        } else {
+          tableHtml += `
+            <tr>
+              <td>Question ${index + 1}</td>
+              <td colspan="4" style="color: #999;">No data entered</td>
+            </tr>
+          `;
+        }
+      });
+
+      if (countAllScores === 0) {
+        alert("Please enter scores for at least one question.");
+        return;
+      }
+
+      const overallAvg = (totalAllScores / countAllScores).toFixed(2);
+
+      // Display overall results
+      document.getElementById('resSubject').innerText = subject;
+      document.getElementById('resTeacher').innerText = teacher;
+      document.getElementById('resTotalStudents').innerText = maxStudents;
+      document.getElementById('resOverallAvg').innerText = overallAvg;
+
+      // Render table rows
+      document.getElementById('questionTableBody').innerHTML = tableHtml;
+
+      // Show results section
+      document.getElementById('resultsSection').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
+var hats20Files = [
+  'https://www.google.com/insights/consumersurveys/gk/static/hats-integration-release.js'
+];
+
+// Callout to the HaTS 2.0 library to show a survey after all files are loaded.
+var numLoadedFiles = 0;
+function showSurvey() {
+  numLoadedFiles++;
+  if (numLoadedFiles == hats20Files.length) {
+    var sc = window._402 && _402.sc;
+    hatsStub.GCSHatsUrl = 'https://www.google.com/insights/consumersurveys/gk/prompt';
+    hatsStub.showSurvey("7kf4wbtnoxwq45c3yg2xereddi", 'en-US', sc, {'fetch_google_token': false});
+  }
+}
+
+// Load all components of the Hat2.0 library.
+hats20Files.forEach(function(url) {
+  var fileType = url.split('.').pop();
+  if (fileType == 'js') {
+    var js = document.createElement('script');
+		var noncedScript = document.querySelector('script[nonce]');
+    if (noncedScript) {
+		  js.setAttribute('nonce', noncedScript['nonce'] || noncedScript.getAttribute('nonce'));
+    }
+    js.type = 'text/javascript';
+    js.charset = 'utf-8';
+    js.async = true;
+    js.src = url;
+    js.addEventListener('load', showSurvey);
+    document.head.appendChild(js);
+  } else if (fileType == 'css') {
+    var css = document.createElement("link");
+    css.setAttribute("rel", "stylesheet");
+    css.setAttribute("type", "text/css");
+    css.setAttribute("href", url);
+    css.onload = showSurvey;
+    document.head.appendChild(css);
+  }
+});
